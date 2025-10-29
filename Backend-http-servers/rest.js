@@ -29,8 +29,66 @@ const server = http.createServer((req, res) => {
             res.end(JSON.stringify({ message: "Dish not found" }));
         }
     }
+
+    else if (method === "POST" && pathname === "/menu") {
+        let body = "";
+
+        req.on("data", chunk => {
+            body += chunk.toString();
+        });
+
+        req.on("end", () => {
+            const newItem = JSON.parse(body);
+            newItem.id = menu.length + 1;
+            menu.push(newItem);
+
+            res.writeHead(201);
+            res.end(JSON.stringify({message: "Item added successfully", item: newItem}));
+        });
+    }
+
+    else if (method === "DELETE" && pathname.startsWith("/menu/")) {
+        const id = parseInt(pathname.split("/")[2]);
+        const index = menu.findIndex(item => item.id === id);
+
+        if (index !== -1) {
+            menu.splice(index, 1);
+            res.writeHead(200);
+            res.end(JSON.stringify({ message: "Item deleted successfully" }));
+        } else {
+            res.writeHead(404);
+            res.end(JSON.stringify({ message: "Dish not found" }));
+        }
+    }
+
+    else if (method === "PUT" && pathname.startsWith("/menu/")) {
+        const id = parseInt(pathname.split("/")[2]);
+        const index = menu.findIndex(item => item.id === id);
+
+        if (index !== -1) {
+            let body = "";
+
+            req.on("data", chunk => {
+                body += chunk.toString();
+            });
+
+            req.on("end", () => {
+                const updatedItem = JSON.parse(body);
+                menu[index] = { ...menu[index], ...updatedItem };
+
+                res.writeHead(200);
+                res.end(JSON.stringify({ message: "Item updated successfully", item: menu[index] }));
+            });
+        } else {
+            res.writeHead(404);
+            res.end(JSON.stringify({ message: "Dish not found" }));
+        }
+    }
+
 });
 
 server.listen(3000, () => {
     console.log("Server is listening on port 3000");
 });
+
+
